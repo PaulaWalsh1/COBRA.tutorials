@@ -1,11 +1,12 @@
 %% Tutorial 3 Creation human-microbiome whole-body models (mWBMs)
-% In this section we combine the newly created microbiome community models with 
-% the previously developed WBMs [4].  We will show the code required to create 
-% one mWBM. Later on we will explain which functions to use to generate multiple 
-% mWBMs with just one command.
+% In this section, we combine the newly created microbiome community models 
+% with the previously developed WBMs [4].  We will first demonstrate the code 
+% required to create one mWBM. Later, we will explain how to use functions to 
+% generate multiple mWBMs with just one command.
 % 
-% First we need to load a microbiome model and a WBM model. Here we will load 
-% the microbiome model corresponding to sample ID CSM5MCXD and the female WBM.
+% To begin, we need to load a microbiome model and a WBM model. In this example, 
+% we will load the microbiome model corresponding to sample ID CSM5MCXD and the 
+% female WBM.
 
 % If you have not just run tutorial 1 or 2, or you have cleared your
 % workspace, you will need to run the code below to define your directories
@@ -31,23 +32,23 @@ modelM = load([paths.mgPipe.outputPathMgPipe, filesep, 'Diet', filesep, 'microbi
 modelH = loadPSCMfile('Harvetta');
 %% 
 % When combining the WBM with the microbiome model, the [u] section in the microbiome 
-% model is change to [luM] which stands for lumen microbiome. Instead of [e] the 
-% microbiome now exchanges metabolites with [LuLi] which is the lumen of the large 
-% intestine. Reactions are added to ensure metabolites unique to the microbiome 
-% model can be taken up from the diet and be excreted in the feces. The function 
-% used to combine a microbiome model with a WBM model is called combineHarveyMicrotiota 
-% and takes the following inputs
+% model is change to [luM] which stands for lumen microbiome. Instead of [e], 
+% the microbiome now exchanges metabolites with [LuLi] compartment, which is the 
+% lumen of the large intestine. Additional reactions are added to ensure metabolites 
+% unique to the microbiome model can be taken up from the diet and be excreted 
+% in the feces. The function used to combine a microbiome model with a WBM model 
+% is called combineHarveyMicrotiota and takes the following inputs:
 %% 
 % * modelH                        Whole-body metabolic model structure
 % * modelM                        Microbiome model
 % * couplingConstraint       Coupling constraint for microbiome model 
 %% 
-% A coupling constraint in this context connects the metabolic activities of 
-% the WBM and microbiome model, ensuring that the exchange of metabolites is balanced 
-% and physiologically realistic. The value 400 is often used arbitrarily as a 
-% scaling factor to adjust the relative metabolic fluxes between the two systems, 
-% accounting for their differences in metabolic capacities. This ensures stability 
-% and consistency in the model's simulations.
+% A coupling constraint in this context links the metabolic activities of the 
+% WBM and the microbiome model, ensuring that the exchange of metabolites between 
+% them is balanced and physiologically realistic. The value 400 is typically used 
+% as an arbitrary scaling factor to adjust the relative metabolic fluxes between 
+% the two systems, accounting for their differences in metabolic capacities. This 
+% helps maintain stability and consistency in the model's simulations.
 % 
 % Some warning might pop up:
 %% 
@@ -55,9 +56,9 @@ modelH = loadPSCMfile('Harvetta');
 % * The inserted Model contains an old style coupling matrix (A). The Matrix 
 % will be converted into a Coupling Matrix (C) and fields will be adapted.
 %% 
-% These are expected and can be safely ignored
+% These warnings are expected and can be safely ignored.
 % 
-% Now we can combine the models
+% Now we can combine the models:
 
 % Set the coupling constraint to 400
 couplingConstraint = 400;
@@ -102,12 +103,12 @@ boundType = 'b';
 % Change the bounds of the microbiome biomass fecal excretion to [1,1]
 mWBM = changeRxnBounds(mWBM,rxnNameList, value, boundType);
 %% 
-% Here we also define the diet that we want to use to simulate our human-microbiome 
-% models with. The default option is EUAverageDiet but other diet options are 
-% HighFiberDiet, HighProteinDiet, UnhealthyDiet and VegetarianDiet. If you want 
-% to change the diet use one of the afore-mentioned diet names and set that as 
-% the Diet variable istead of 'EUAverageDiet'. Using setDietConstraints we put 
-% the diet on the mWBM. The function also adds additional metabolites in small 
+% Here, we will also define the diet to simulate our human-microbiome models. 
+% The default option is EUAverageDiet but other diet options are HighFiberDiet, 
+% HighProteinDiet, UnhealthyDiet and VegetarianDiet. If you want to change the 
+% diet use one of the afore-mentioned diet names and set that as the Diet variable 
+% instead of 'EUAverageDiet'. Using the function setDietConstraints, we apply 
+% the diet to the mWBM. The function also adds additional metabolites in small 
 % amounts (0.1-1 mmol/day). These extra metabolites are added as they are usually 
 % not present in the diet files, either pre-made or designed on vmh.life. The 
 % metabolites range from ions to small molecules required to ensure microbiome 
@@ -118,7 +119,7 @@ mWBM = changeRxnBounds(mWBM,rxnNameList, value, boundType);
 % * factor - value between 0 and 1; default is 1, i.e, 100% of the provided 
 % diet
 %% 
-% We will define our inputs and set the diet
+% We will define our inputs and set the diet:
 
 % Set the chosen diet
 diet = 'EUAverageDiet'
@@ -128,7 +129,7 @@ mWBM = setDietConstraints(mWBM, diet, factor);
 % Now we have succesfully created a mWBM. The next step is testing if the mWBM 
 % is feasible.
 %% Fixing infeasible mWBM
-% Now we will check if our create mWBM is feasible. That means can it produce 
+% Now, we will check if our create mWBM is feasible. That means can it produce 
 % both microbiome biomass and statisfy the body maintanance reaction. First we 
 % will set the bound of faecal exchange of microbiome biomass to 1 faecal exchange/day. 
 % This was done in line 123, but  sometimes you would already have mWBMs created 
@@ -169,23 +170,24 @@ solution = optimizeWBModel(mWBM);
 % Print the value of the solution
 solution.f
 %% 
-% If the sol.f value is 1, great! That means that the model can produce both 
-% enough microbiome biomass and can maitain the body maintanance reaction. To 
-% ensure we can use the model again we will also save it. The path to where mWBMs 
-% are saved was created in section 1 and saved in the paths variable.
+% If the sol.f value is 1, great! That means the model can produce sufficient 
+% microbiome biomass and satisfy the body maintenance reaction. To ensure the 
+% model can be reused later, we will also save it. The path for saving the mWBMs 
+% was already created in  section 1 and saved in the paths variable.
 
 % Save the model
 save([paths.mWBM.outputPathMWBM,filesep,'mWBM_CSM5MCXD_female.mat'],'-struct','mWBM')
 %% 
-% If the output is not 1, it means that the model is unable to create 1 microbiome 
-% biomass per day. We will check if the model is able to do it if we open up all 
-% dietary reactions. To find all dietary reactions we use the find and contain 
-% function to obtain all the reaction indexes that have the prefix Diet_EX_, which 
-% indicates dietary exchange reactions. We then use changeRxnBounds to set the 
-% lower bound of each dietary exchange reaction to -100000 the unconstrained value 
-% used in the WBMs. Then we solve the model again to see if the diet was the problem. 
-% The upper bound does not have to be set to 0, as any unused metabolite can pass 
-% from the diet to the fecal exchange via various compartments.
+% If the output is not 1, it means the model is unable to produce 1 unit of 
+% microbiome biomass per day. To troubleshoot, we will check whether relaxing 
+% all dietary constraints resolves the issue. First, we identify all dietary exchange 
+% reactions by using the |find| and |contains| functions to obtain the reaction 
+% indexes with the prefix Diet_EX_, which indicates dietary exchanges. We then 
+% apply changeRxnBounds to set the lower bound of each of these reactions to -100000 
+% — the unconstrained value typically used in WBMs. After modifying the bounds, 
+% we solve the model again to determine whether the dietary constraints were the 
+% limiting factor. The upper bounds do not need to be changed, as any unused metabolite 
+% can pass through the compartments and be excreted in the feces.
 
 % Find all dietary reactions
 idx = contains(mWBM.rxns,'Diet_EX');
@@ -214,10 +216,10 @@ solOpen.f
 % dietary reactions in batches to try and narrow down which reaction is required 
 % for feasibility. It will continue to do this untill it has narrowed down a set 
 % a essential reactions. As the process is random, running the code twice on the 
-% same model might give differing results. If no dietary solution is possible 
-% it is good practice to double check that the germ-free (WBM withouth the microbiome) 
-% models and the microbiome models are individually feasible with the chosen diet. 
-% If the microbiome models are infeasible it might be good to check a) a different 
+% same model might give differing results. If no dietary solution is found, it's 
+% good practice to verify that both the germ-free WBM (i.e., the WBM without the 
+% microbiome) and the microbiome model are individually feasible under the selected 
+% diet. If the microbiome model is itself infeasible, consider: a) a different 
 % diet, b) any irregularities in the present_species file generated from MARS. 
 % If a solution cannot be found it is possible to open a issue on the googlegroups 
 % for support: <https://groups.google.com/g/cobra-toolbox https://groups.google.com/g/cobra-toolbox>
@@ -244,21 +246,23 @@ mWBM.lb(matches(mWBM.rxns,string(missingDietComponents)))=-0.1;
 % Save the updated mWBM
 save([paths.mWBM.outputPathMWBM,filesep,'mWBM_CSM5MCXD_female.mat'],'-struct','mWBM');
 %% Creating multiple mWBMs
-% In order to easily generate multiple mWBM models we need a file that matches 
-% the sex with the sample IDs. This will determine if the microbiome model created 
-% from that sample will be combined with a female (Harvetta) or male (Harvey) 
-% WBM. The diet we will use here is the EUAverageDiet. The metadata path, the 
-% path to the microbiome models and the path where the mWBMs should be stored 
-% were all defined at the beginning of this tutorial.
+% ITo efficiently generate multiple mWBM models, we need a file that maps sample 
+% IDs to sex. This determines whether the microbiome model from each sample is 
+% combined with a female (Harvetta) or male (Harvey) WBM. For this tutorial, we 
+% will use the EUAverageDiet.
 % 
-% The function _createBatchMWBM.m_ will create for all the microbiome models 
-% in the microbiome directory a mWBM. Given that the sample IDs matching to the 
-% microbiome models have a corresponding sex in the metadata. The code also checks 
-% if the any of the mWBMs are infeasible and then runs the _getMissingDietModelHM.m_ 
-% function in a loop to ensure all the mWBMs that are created are feasible and 
-% all have the same dietary constraints. This allows for proper comparisons of 
-% the flux predictions later on. The function _createBatchMWBM.m_ takes the following 
-% inputs:
+% The paths to the metadata, microbiome models, and the target directory for 
+% saving mWBMs were all defined at the beginning of the tutorial.
+% 
+% The function createBatchMWBM.m automates the creation of mWBMs for all microbiome 
+% models in the specified directory, provided that the sample IDs have corresponding 
+% sex information in the metadata. The function also checks each created model 
+% for feasibility. If a model is found to be infeasible, it will call getMissingDietModelHM.m 
+% in a loop to resolve the issue. This ensures that all generated mWBMs are feasible 
+% and follow the same dietary constraints—critical for ensuring consistent and 
+% comparable flux predictions.
+% 
+% The function |createBatchMWBM.m| requires the following inputs:
 %% 
 % * *microbiomeDir* - A string with the path to the directory where the microbiome 
 % models are stored, created via MgPipe. Created in section 1
@@ -276,7 +280,7 @@ save([paths.mWBM.outputPathMWBM,filesep,'mWBM_CSM5MCXD_female.mat'],'-struct','m
 % created mWBMs can grow on the the specified diet if set to true. Defaults to 
 % true.
 %% 
-% Now we can set the inputs and run the function.
+% Now we can set the inputs and run the function:
 
 % Set the diet
 diet = 'EUAverageDiet';

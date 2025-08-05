@@ -1,16 +1,16 @@
-%% Tutorial on using Human-microbiome models
+%% Tutorial 4 Using Human-microbiome models
 %% Solving Models
 % Bram Nap, Tim Hensen, Anna Sheehy - 07-2024
 % 
-% This tutorial will explain step by step different ways of setting objective 
-% functions, solving human-microbiome models (mWBMs) and code to efficiently optimise 
-% multiple reactions for all models and how to perfrom different analsyes on the 
-% resulting flux data. The princinples explained here are also valid for whole 
-% body models (WBMs), personalised WBMs (iWBMs) and microbiome, personalised WBMs 
-% (miWBMs).
+% This tutorial will explain, step by step, different ways of setting objective 
+% functions, solving human-microbiome models (mWBMs), and code to efficiently 
+% optimise multiple reactions for all models and how to perform different analyses 
+% on the resulting flux data. The principles explained here are also valid for 
+% whole body models (WBMs), personalised WBMs (iWBMs) and microbiome-personalised 
+% WBMs (miWBMs).
 % 
 % We will make sure the COBRA toolbox is initialised and the appropriate solver 
-% is set. The different solvers supported are
+% is set. The different solvers supported are:
 %% 
 % * cplex_direct
 % * gurobi
@@ -18,12 +18,12 @@
 % * mosek
 % * tomlab_cplex
 %% 
-% To change the solver, put the solver name of the list above in place of ibm_cplex 
-% in the code below. To see MATLAB version and solver version compatibility see 
-% <https://opencobra.github.io/cobratoolbox/stable/installation.html#solver-installation 
+% To change the solver, put the solver name from the list above in place of 
+% gurobi in the code below. To see MATLAB version and solver version compatibility, 
+% see <https://opencobra.github.io/cobratoolbox/stable/installation.html#solver-installation 
 % https://opencobra.github.io/cobratoolbox/stable/installation.html#solver-installation>
 % 
-% Various solvers can be obtained through an free academic license.
+% Various solvers can be obtained through a free academic license.
 
 global CBTDIR
 if isempty(CBTDIR)
@@ -33,21 +33,21 @@ end
 % Define and set the solver. The names defined in the bullet points above
 % are the names accepted in the changeCobraSolver function. To switch
 % solver just change ibm_cplex to the solver of your choice.
-solver = 'ibm_cplex';
+solver = 'gurobi';
 
 changeCobraSolver(solver);
 %% 
-% For ease of access we will again define the folders used to store and read 
+% For ease of access, we will again define the folders used to store and read 
 % results from. If tutorial 1 and 2 are used, please use the same inputs used 
-% in those tutorials. If you downloaded the pre-made tutorial files set the path 
+% in those tutorials. If you downloaded the pre-made tutorial files, set the path 
 % for the downloaded files as the resultPath variable. We will also define the 
-% metadata path again as we will need it later in this tutorial. Note that the 
-% explanation and steps are the exact same for the setup as in the other tutorials. 
-% If the directories already exist - the code will recognise that and not make 
-% a new one and will not overwrite the data inside of it.
+% metadata path again, as we will need it later in this tutorial. Note that the 
+% explanation and steps are the exact same for setup as in the other tutorials. 
+% If the directories already exist - the code will recognise that and will not 
+% create a new one or overwrite the data inside them.
 %% 
 % * resultPath - The path where all the results of this tutorial will be stored. 
-% This ensure all your results will be in one place and are thus easily accesible. 
+% This ensures all your results will be in one place and are thus easily accesible. 
 % Make sure the the folder is accesible to you.
 % * *metadataPath* - The location of the metadata file. This is used in both 
 % the generation of human-microbiome models as well as the analysis of results 
@@ -57,11 +57,11 @@ changeCobraSolver(solver);
 % string as we do not need it ('')
 %% 
 % We set up the variables in the *paths* variable, which is a structure. Each 
-% field in the structure is dedicated to store the relevant variables used in 
-% the different steps of Persephone. Normally we would define each variable at 
-% the start in the configuration file. However here we will only specifiy the 
+% field in the structure is dedicated to storing the relevant variables used in 
+% the different steps of Persephone. However, we would define each variable at 
+% the start in the configuration file. However, here we will only specify the 
 % output directories used in Persephone. The other variables we will define as 
-% we go along for clarity.
+% we go along, for clarity.
 % 
 % Please copy and paste the paths to the required files in the code below. Remember 
 % to add file extensions where relevant.
@@ -76,7 +76,7 @@ paths.General.metadataPath = '';
 paths.Mars.readsTablePath = ''
 %% 
 % Now we will define some paths as to where we want to store all of our results. 
-% We do not have to make these directories ourselves, the code will do it for 
+% We don't need to make these directories manually, the code will handle it for 
 % us.
 
 paths.seqC.outputPathSeqC = [resultPath, filesep, 'resultSeqC'];
@@ -90,21 +90,21 @@ paths.stats.outputPathStatistics = [resultPath, filesep, 'resultStatistics'];
 
 %% 
 % The function _initPersephone.m_ performs the _initCobraToolbox.m_ function, 
-% sets the COBRA solver and checks if the required toolboxes are installed (line 
-% 1-7). Additionaly it generates the folder structure for the results. IMPORTANT, 
+% sets the COBRA solver, and checks if the required toolboxes are installed (line 
+% 1-7). Additionally, it generates the folder structure for the results. IMPORTANT: 
 % the output structure used in all 3 tutorials is generated with initPersephone.m. 
 % The metadata and the reads table are put through sanity checks. initPersphpne.m 
 % ensures that in the metdata the columns with the sample IDs and sample sex have 
-% the correct headers and readable data types. It always assumed the first column 
-% contains sample IDs. It will create a new updated file and will also update 
-% the metadata path accordingly. If you use the test data files you can see that 
-% the column sample ID has been changed to ID and the column gender has been altered 
-% to Sex. Additionally the data in the column Sex has been changed from M/F to 
-% male/female. Important if your own metadata does not have alternative headers 
-% accounted for in the function it will raise ahnerror. That is easily fixed by 
-% changing your column headers to ID or Sex depending on which data type is causing 
-% the issue. Finally we test if the sample IDs in the microbiome data match that 
-% of the metadata.
+% the correct headers and readable data types. It is always assumed that the first 
+% column contains sample IDs. It will create a new updated file and will also 
+% update the metadata path accordingly. If you use the test data files, you can 
+% see that the column "sample ID" has been changed to "ID" and the column "gender" 
+% has been changed to "Sex". Additionally the data in the column "Sex" has been 
+% changed from "M/F" to "male/female". IMPORTANT:  if your own metadata does not 
+% have alternative headers accounted for in the function it will raise an error. 
+% That is easily fixed by changing your column headers to "ID" or "Sex" depending 
+% on which data type is causing the issue. Finally, we test if the sample IDs 
+% in the microbiome data match that of the metadata.
 
 % Create the file structure for the results of all the parts of the
 % tutorial (not just this tutorial)
@@ -139,15 +139,15 @@ paths.stats.outputPathStatistics = [resultPath, filesep, 'resultStatistics'];
 % -resultStatistics
 % 
 % The content of each of the folders will be discussed in the appropriate sections 
-% in the three tutorials.
+% in the four tutorials.
 % 
-% We have to also update the metadata path to reflect the updated metadata file.
+% We also have to update the metadata path to reflect the updated metadata file.
 
 paths.General.metadataPath = updatedMetadataPath;
 % Part 1: Prepare WBM model for analysis. 
-% The first step before we can begin solving an mWBM, is making sure that the 
-% appropriate constraints are set. First we have to load a mWBM, we will use model 
-% *mWBM_CSM5MCXD.mat* created from the test dataset in *Tut_1_0_MicrobiomeCreation.* 
+% The first step before we can begin solving an mWBM, is to make sure that the 
+% appropriate constraints are set. First, we have to load a mWBM, we will use 
+% model *mWBM_CSM5MCXD.mat*  created from the test dataset in *Tut_1_0_MicrobiomeCreation.* 
 % If the tutorial is followed it should be stored in the folder mWBMmodels. The 
 % model can also be found in the supplementary materials.
 
@@ -173,25 +173,25 @@ mWBM = load([paths.mWBM.outputPathMWBM, filesep, 'mWBM_CSM5MCXD_female.mat']);
 % Set "Whole_body_objective_rxn" flux bounds
 % The '|Whole_body_objective_rxn'| is an artificial reaction that represents 
 % the *total biomass being produced* in the body. This reaction includes dummy 
-% duplicates of all organ biomass metabolites that are coupled to the organ biomass 
-% reactions. The dummy biomass metabolite stoichiometries are scaled by a coefficient 
-% corresponding to their relative organ weight. Thus, each organ's contribution 
-% to the whole-body biomass production is weighted according to its size or mass 
-% relative to the entire body. By default the constraints on this reaction are 
-% set to [1,1] mmol/day, which represents a 100% biomass production and maintenance 
-% throughout the body but it always good practice to reset in case of doubt. We 
-% set the bounds to [1,1] mmol/day to make sure we can compare different models 
-% with each other and that differences are not caused by changes in flux through 
-% the "Whole_body_objective_rxn". It is recommended keep the bounds to [1,1] mmol/day 
-% as that is an optimised value for modelling and changing can lead to unexpected 
-% flux values or errors. To change reaction bounds we use the changeRxnBounds 
-% function. changeRxnBounds changes the constraints on the upper and/or lower 
-% bounds of a specified reaction or set of reactions in the model and takes the 
-% following inputs:
+% duplicates of all organ biomass metabolites that are coupled to the respective 
+% organ biomass reactions. The dummy biomass metabolite stoichiometries are scaled 
+% by a coefficient corresponding to their relative organ weight. Thus, each organ's 
+% contribution to the whole-body biomass production is weighted according to its 
+% size or mass relative to the entire body. By default, the constraints on this 
+% reaction are set to [1,1] mmol/day, which represents a 100% biomass production 
+% and maintenance throughout the body, but it always good practice to reset them 
+% in case of doubt. We set the bounds to [1,1] mmol/day to make sure we can compare 
+% different models with each other and that differences are not caused by changes 
+% in flux through the "Whole_body_objective_rxn". It is recommended to keep the 
+% bounds at [1,1] mmol/day, as this is an optimised value for modelling. Changing 
+% this can lead to unexpected flux values or errors. To change reaction bounds 
+% we use the changeRxnBounds function. changeRxnBounds changes the constraints 
+% on the upper and/or lower bounds of a specified reaction or set of reactions 
+% in the model and takes the following inputs:
 %% 
 % * *model* - A metabolic model, in our case a mWBM or WBM
 % * *rxnNameList* - A cell array of reactions that have to have their bounds 
-% changed.A cell array of reaction IDs or a string for a single reaction ID that 
+% changed. A cell array of reaction IDs or a string for a single reaction ID that 
 % species which reaction(s) need their bounds altered. In our case 'Whole_body_objective_rxn'
 % * *value* - A numeric value that say to which value the bound has to be changed 
 % to. Can be one value for all reactions, or one value for each reaction to be 
@@ -204,7 +204,7 @@ mWBM = load([paths.mWBM.outputPathMWBM, filesep, 'mWBM_CSM5MCXD_female.mat']);
 mWBM = changeRxnBounds(mWBM, 'Whole_body_objective_rxn', 1, 'b');
 %% 
 % To check if the changes were succesful we can use the function printFluxBounds 
-% which takes:
+% which takes the following inputs:
 %% 
 % * *model* - A metabolic model, in our case a mWBM or WBM
 % * *rxns* - Cell array of reactions in the model to print the bounds for. In 
@@ -229,7 +229,7 @@ printFluxBounds(mWBM,{'Whole_body_objective_rxn'}, 0)
 % 
 % _*biomass_maintenance_noTrTr:* 
 % 
-% (no translation, no transcription) This reaction is used excludes amino acids, 
+% (no translation, no transcription). This reaction used excludes amino acids, 
 % nuclear deoxynucleotides, and cellular deoxynucleotides except for adenosine-triphosphate 
 % (ATP). It can be used to mimic fasting conditions in the models. Let's take 
 % a look at all the biomass reactions in the model:
@@ -237,20 +237,20 @@ printFluxBounds(mWBM,{'Whole_body_objective_rxn'}, 0)
 % To find the reactions associated with biomass in the mWBMs we
 %% 
 % # Obtain the indexes (idx in the code) of the reaction IDs that contain the 
-% word "biomass"
-% # Print the reaction IDs associated with the indices
+% word "biomass".
+% # Print the reaction IDs associated with the indices.
 
 % Find reactions containing 'biomass'
 biomassReactions = model.rxns(contains(model.rxns, 'biomass'))
 %% 
 % You can see the different biomass reactions in the biomassReactions that make 
-% up the complete whole body biomass reaction, as well as the biomass reactions 
-% that produce the biomass for the pan-species models. These, however, are only 
-% used in the biomass reaction for the community microbiome biomass.
+% up the complete whole-body biomass reaction, as well as the biomass reactions 
+% that produce the biomass for the pan-species microbiome models. These, however, 
+% are only used in the biomass reaction for the microbiome community biomass.
 %% 
-% Organs which have regerative capacities (e.g., liver, heart, and kidney) will 
-% have their specific '|biomass_reaction'| included in the '|Whole_body_objective_rxn'|. 
-% Other organs will use the '|biomass_maintenance'| reaction.(For more detail 
+% Organs which have regenerative capacities (e.g., liver, heart, and kidney) 
+% will have their specific '|biomass_reaction'| included in the '|Whole_body_objective_rxn'|. 
+% Other organs will use the '|biomass_maintenance'| reaction. (For more detail, 
 % see: <https://pubmed.ncbi.nlm.nih.gov/32463598/). https://pubmed.ncbi.nlm.nih.gov/32463598/).> 
 % The '|Whole_body_objective_rxn'| thus provides a comprehensive representation 
 % of the body's overall biomass production, taking into account the unique metabolic 
@@ -261,21 +261,21 @@ wbmReaction = printRxnFormula(mWBM, 'Whole_body_objective_rxn');
 %% Look at dietary input
 % When analysing multiple WBM models, it is important that the models have an 
 % identical dietary input as otherwise we will not know if changes in flux results 
-% originate from the personalisations/microbiome or from the diet. Therefore we 
+% originate from the personalisation/microbiome or from the diet. Therefore, we 
 % ensure here that the models have identical diets. We constrained the HM models 
-% in tutorial 1 or 1.5 with the EUAverageDiet. Setting the diet automatically 
-% introduces a range up and downwards on the given value to be set as a bound 
-% as we can see with the dietary bound on D-glucose. Dietary reactions always 
-% follow the structure Diet_EX_"metabolite ID"[d].
+% in tutorial 1 or 2 with the EUAverageDiet. Setting the diet automatically introduces 
+% a range up and downwards on the given value to be set as a bound as we can see 
+% with the dietary bound on D-glucose. Dietary reactions always follow the structure 
+% Diet_EX_"metabolite ID"[d].
 
 % Print flux bound of D-glucose in the diet
 printFluxBounds(mWBM, {'Diet_EX_glc_D[d]'}, 0)
 %% 
-% Models might take up different amounts of glucose, however if we fix the dietary 
+% Models might take up different amounts of glucose; however if we fix the dietary 
 % uptake to a single value, all the unused glucose will be automatically excreted 
-% in the feces. In the end it does not matter if we have a range between the lower 
-% and upper bound or a single value for both, as long as all the models have the 
-% same bounds.
+% in the feces. In the end, it does not matter if we have a range between the 
+% lower and upper bounds or a single value for both, as long as all the models 
+% have the same bounds.
 %% *Fixing community microbiome biomass production*
 % When investigating microbial influences on host metabolism, the total biomass 
 % flux between the host and the microbiome is commonly fixed at one.
@@ -287,7 +287,7 @@ printFluxBounds(mWBM, {'Diet_EX_glc_D[d]'}, 0)
 % even if the microbiome's composition changes, the total amount of metabolites 
 % exchanged remains the same. This setup mimics a steady-state interaction where 
 % the host and microbiome are in a balanced metabolic exchange.
-% # *Comparability of Flux Values:* By maintaining a fixed biomas flux, the 
+% # *Comparability of Flux Values:* By maintaining a fixed biomass flux, the 
 % flux values in specific reactions become more comparable across different microbiome 
 % compositions. This is because the fluxes now represent relative changes in the 
 % microbiome structure rather than absolute differences in metabolite amounts. 
@@ -295,8 +295,8 @@ printFluxBounds(mWBM, {'Diet_EX_glc_D[d]'}, 0)
 % metabolic exchanges rather than being confounded by varying total metabolite 
 % amounts.
 %% 
-% To change to reaction bounds of the microbiome biomass production we use the 
-% same function as before, changeRxnBounds.
+% To change to reaction bounds of the microbiome biomass production, we use 
+% the same function as before: changeRxnBounds.
 
 % Change the reaction bounds
 mWBM = changeRxnBounds(mWBM, 'Excretion_EX_microbiota_LI_biomass[fe]', 1, 'b');
@@ -308,30 +308,30 @@ mWBM = changeRxnBounds(mWBM, 'Excretion_EX_microbiota_LI_biomass[fe]', 1, 'b');
 % # Which organ/s are most relevant
 % # Availability of omics data, e.g., serum and urine metabolomics
 %% 
-% As outlined in Thiele _et al._ (2020) [1] whole body models we are working 
+% As outlined in Thiele _et al._ (2020) [1], the whole body models we are working 
 % with capture metabolism in 26 organs, some of which can are outlined in the 
 % diagram below. The models 'blood compartment', constrained by realistic parameters 
-% based of blood flow rate and metabolite concentration, is the connection compartment 
-% which allows for exchange of metabolites between compartments where each has 
+% based on blood flow rate and metabolite concentration, is the connection compartment 
+% which allows for exchange of metabolites between compartments, where each has 
 % unique lower and upper bounds on the specific metabolites in question.
 % 
 % 
 % 
-% _A schematic overview of the construction of the WBMs with the left bottom 
+% _A schematic overview of the construction of the WBMs, with the left bottom 
 % showing the microbiome intergration. Taken and adapted from [1]_
 % 
 % This allows us to explore organ specific metabolism and it means that when 
-% we caculate the flux of a metabolite in downstream organs e.g. bladder, colon 
-% etc.,  Not only does the model take into account the organ where the flux is 
-% calculated but the all the organs which might contribute the metabolite availability 
-% in that particular organ giving us more accurate predictions. When dealing with 
-% model comaprtments that represent blood, urine, faeces or cereoborspinal fluid 
-% (CSF) it also means that where metabolomic data is available, we can compare 
-% it to the models prediction.
+% we calculate the flux of a metabolite in downstream organs e.g. bladder, colon 
+% etc., not only does the model take into account the organ where the flux is 
+% calculated, but also all the organs which might contribute to the metabolite 
+% availability in that particular organ, giving us more accurate predictions. 
+% If the model contains compartments representing blood, urine, faeces, or cerebrospinal 
+% fluid (CSF), this allows for direct comparison between model predictions and 
+% available metabolomic data.
 % 
 % Reactions typically follow a specific naming format. Reactions within organs 
-% defined by their reactions ID and the organ in which they are happening (this 
-% may be a human organ or microbe). For example,this hyptotaurine/taurine oxireductase 
+% defined by their reactions ID and the organ in which they are occuring in (this 
+% may be a human organ or microbe). For example, this hyptotaurine/taurine oxireductase 
 % reaction (r0381) can be found in the VMH as:
 % 
 % 
@@ -345,12 +345,12 @@ mWBM = changeRxnBounds(mWBM, 'Excretion_EX_microbiota_LI_biomass[fe]', 1, 'b');
 % 
 % *panMorganella_morganii_r0381*
 % 
-% Exchange reactions  are mass-inbalanced and can give valuable insights into 
+% Exchange reactions are mass-imbalanced and can give valuable insights into 
 % the amount of metabolites exchanged with the environment. The naming of reactions 
 % in the models follows a pattern so all excretion reactions contain 'EX_'  and 
-% ends in the biofluid comparment that has has interactions witht the environment 
-% ([u], [fe], [a], [sw], [d]) For example: Exchange of D-Glucose from metabolite 
-% pools uring, blood and CSF would be written as follows: 
+% ends in the biofluid comparment that has interactions with the environment ([u], 
+% [fe], [a], [sw], [d]) For example: Exchange of D-Glucose from metabolite pools 
+% urine, blood and CSF would be written as follows: 
 % 
 % *EX_glc_D[u]*
 % 
@@ -361,15 +361,15 @@ mWBM = changeRxnBounds(mWBM, 'Excretion_EX_microbiota_LI_biomass[fe]', 1, 'b');
 % 
 % 
 % Transport reactions are mass-balanced and transport metabolites from one compartment 
-% to another :
+% to another:
 % 
 % *glc_D[e]   <=>   glc_D[c]* 
 % 
-% The typical naming convention is either a lower case t in the reaction name 
-% (which is usually all upper case) or it will indicate two compartment names 
-% in the reaction ID. Examples are shown for the transport of 2-oxo-butyrate from 
-% the lumen to the diet and the transport of cholate from the liver cytosol to 
-% the portal vein. Most transport reactions are reversible.
+% The typical naming convention is either a lower case "t" in the reaction name 
+% (which is usually all upper case), or it will indicates two compartment names 
+% in the reaction ID. Examples include the transport of 2-oxo-butyrate from the 
+% lumen to the diet, and the transport of cholate from the liver cytosol to the 
+% portal vein. Most transport reactions are reversible.
 % 
 % *GI_EX_2obut[lu]_[d]*
 % 
@@ -379,7 +379,7 @@ mWBM = changeRxnBounds(mWBM, 'Excretion_EX_microbiota_LI_biomass[fe]', 1, 'b');
 % reactions and solve the models.
 % Example One: Urinary reaction
 % If you are interested in L-tryptophan excretion fluxes in the urine, you can 
-% investigate the metabolite following these steps: 
+% investigate the metabolite by following these steps: 
 %% 
 % # Find the Virtual Metabolic Human(VMH) ID for L-tryptophan here: <https://vmh.life/ 
 % https://vmh.life/>
@@ -401,7 +401,7 @@ mWBM = changeObjective(mWBM, 'EX_trp_L[u]');
 % Set objective function to maximise for the reaction
 mWBM.osenseStr = 'max';
 %% 
-% Optimize and display the flux value (solution.f)
+% Optimize and display the flux value (solution.f):
 
 % Perform FBA
 solution = optimizeWBModel(mWBM);
@@ -409,12 +409,13 @@ solution = optimizeWBModel(mWBM);
 solution.f
 %% 
 % When model muWBM_CSM5MCXD_female.mat is solved for EX_trp_L[u] (urinary excretion 
-% of L-tryptophan) we see that the maximum flux value is 0.0062 mmol/day. Interesting 
-% is if we look at the bounds printed when we called the surfNet function is the 
-% the maximum allowed excretion value is only 0.000038 mmol/day highter than our 
+% of L-tryptophan), we see that the maximum flux value is 0.0062 mmol/day. Interestingly, 
+% if we look at the bounds printed when we called the surfNet function is the 
+% the maximum allowed excretion value is only 0.000038 mmol/day higher than our 
 % optimised value. This means we are close to the maximum allowed flux value allowed 
-% by the model. It is thus alway good to check the bounds of a reaction you want 
-% to optimise if you obtain multiple duplicate values for different models.
+% by the model. It is therefor always a good idea to check the bounds of a reaction 
+% you want to optimise, especially if you obtain multiple duplicate values for 
+% different models.
 % Example Two: Faecal excretion reactions
 % We can perform the same technique if we e.g., want to look at the exchange 
 % of L-proline in the faeces. Important that for faecal exchange reactions, 'Excretion' 
@@ -436,19 +437,19 @@ solution = optimizeWBModel(mWBM);
 % Print the "f" field in the FBA variable
 solution.f
 %% 
-% Using model HM_CSM5MCXD we see that the maximum exchange of feacal L-proline 
+% Using model HM_CSM5MCXD, we see that the maximum exchange of feacal L-proline 
 % is 239.5559 mmol/day.
 % Example Three: Reactions in a particular organ
 % We can also solve reactions performing metabolic transformation in specific 
 % organs. Lets take the oxireductase reaction we mentioned earlier involving taurine 
 % and hypotaurine in the liver.
 % 
-% Check if the reaction exists
+% Check if the reaction exists:
 
 surfNet(mWBM, 'Liver_r0381')
 %% 
-% We see that is an unbound reaction that is reversible. To solve the model 
-% for this reaction we follow the steps outlined in example 1:
+% We see that this is an unbound reaction which is reversible. To solve the 
+% model for this reaction we follow the steps outlined in example 1:
 
 % Update objective reaction
 mWBM = changeObjective(mWBM, 'Liver_r0381');
@@ -459,21 +460,21 @@ solution = optimizeWBModel(mWBM);
 % Print the "f" field in the FBA variable
 solution.f
 %% 
-% For model HM_CSM5MCXD we see that reaction r0381 has a maximum value of 384.9729 
-% mmol/day in the liver. If we would to do this for multiple mWBMs and get the 
-% same results it could be that A) the microbiome does not influence this reaction 
-% or B) the bounds on the transporters of the metabolites involved are constrained 
-% that for mutliple mWBMs the maximum or minimum possible transported flux values 
-% are reached.
+% For model HM_CSM5MCXD we see that reaction 'r0381' has a maximum value of 
+% 384.9729 mmol/day in the liver. If we were to do this for multiple mWBMs and 
+% get the same results it indicate that: A) the microbiome does not influence 
+% this reaction or B) the bounds on the transporters of the metabolites involved 
+% are constrained that for multiple mWBMs, the maximum or minimum possible transported 
+% flux values are reached.
 % Example Four: Transport reaction
-% Finally we will look at optimising transport reactions. Usually transport 
-% reactions are not informative as there could be multiple transporters transporting 
-% the same compound resulting in skewed results. However transporter from the 
-% microbiome lumen to the lumen of the large intestine is interesting as they 
-% tell us something about the maximum transport of the microbiome to the intestines 
-% or vice versa. A microbiome transport reaction will always have the following 
-% pattern: Micro_EX_'metabolite ID'[luLI]_[luM]'. Here we will look at the the 
-% transport of L-tryptophan. First check if the reaction exists in the model.
+% Finally, we will look at optimising the transport reactions. Usually, transport 
+% reactions are not informative, as there could be multiple transporters, transporting 
+% the same compound resulting in skewed results. However, transport from the microbiome 
+% lumen to the lumen of the large intestine is interesting, as they tell us something 
+% about the maximum transport of the microbiome to the intestines or vice versa. 
+% A microbiome transport reaction will always have the following pattern: Micro_EX_'metabolite 
+% ID'[luLI]_[luM]'. Here we will look at the transport of L-tryptophan. First, 
+% check if the reaction exists in the model.
 
 surfNet(mWBM, 'Micro_EX_trp_L[luLI]_[luM]')
 %% 
@@ -482,7 +483,7 @@ surfNet(mWBM, 'Micro_EX_trp_L[luLI]_[luM]')
 % negative value means transport from the microbiome to large intestine. This 
 % is important for our optimisation!
 %% 
-% First we will maximise the transport reaction
+% First, we will maximise the transport reaction:
 
 % Update objective reaction
 mWBM = changeObjective(mWBM, 'Micro_EX_trp_L[luLI]_[luM]');
@@ -493,11 +494,11 @@ solution = optimizeWBModel(mWBM);
 % Print the "f" field in the FBA variable 
 solution.f
 %% 
-% We see the for HM_CSM5MCXD the maximum value for the transport reactions is 
-% 5.4520 mmol/day. This means that the microbiome can maximally take up ~5.5 mmol/day 
-% from the large intestine per day.
+% We see that for HM_CSM5MCXD, the maximum value for the transport reactions 
+% is 5.4520 mmol/day. This means that the microbiome can take up approximately 
+% 5.5 mmol/day from the large intestine at most, per day.
 %% 
-% Now we will minimise the transport reaction
+% Now we will minimise the transport reaction:
 
 % Set objective function to minimise for the reaction
 mWBM.osenseStr = 'min';
@@ -508,67 +509,68 @@ solution.f
 %% 
 % We see now that for mWBM_CSM5MCXD the minimum value for the transporter is 
 % -323.1279 mmol/day. This means the microbiome can supply the large intestine 
-% with ~323 mmol/day of L-tryptophan. It is thus important to look at how a reaction 
-% is formulated if we want to minimise or maximise the problem. 
+% with ~323 mmol/day of L-tryptophan. It is therefor important to examine how 
+% a reaction is formulated when deciding whether to minimise or maximise the problem. 
 %% Predicting metabolite pools (demand reactions)
-% There is also a possibility to solve the models for so called demand reactions. 
+% There is also a possibility to solve the models for so-called demand reactions. 
 % These reactions are formulated as exchange reactions, but operate from within 
-% the model instead of on the compartments that interact with the environment 
-% as normal exchange reactions do. By looking at these demand reactions within 
-% the model, we can gain an understanding of how much of a particular metabolite 
-% the model can "store" in a certain compartment which could give information 
-% on metabolic capabilities within the model instead of on the exchange reactions. 
-% Demand reaction usually need to be added to the model before they can be solved. 
-% The demand reaction is formulated as:
+% the model, rather than on the compartments that interact with the environment 
+% as normal exchange reactions do. By examining these demand reactions within 
+% the model, we can gain insight into how much of a particular metabolite the 
+% model can "store" in a certain compartment which could give information on metabolic 
+% capabilities within the model instead of on the exchange reactions. Demand reaction 
+% usually need to be added to the model before they can be solved. A demand reaction 
+% is formulated as:
 % 
 % *DM_trp_L[bc]: 1 trp_L[bc] -> Ø.* 
 % Example five: Blood
 % It might be of interest to analyse metabolite pools in the blood compartment. 
-% Looking at the flux thorugh reactions in the blood can be insightful in itself 
-% but can also be valuable when serum of plasma metabolomics is available. For 
+% Examining the flux through reactions in the blood can be insightful on its own 
+% but is especially valuable when serum or plasma metabolomics is available. In 
 % this example, L-tryptophan in the blood compartment (trp_L[bc]) is our metabolite 
-% of interest
+% of interest: 
 
 % Define metabolite of interest
 metabolite = 'trp_L[bc]';
 %% 
 % Not all metabolites in the model are present in the blood compartment. We 
 % can check if a metabolite ID is present in a compartment by running surfNet 
-% as we done in the previous examples
+% as we did in the previous examples
 
 % Check if metabolite exists in the model
 surfNet(mWBM, metabolite)
 %% 
-% We see the metabolite number is 1189 and many transport reactions. This indicates 
-% the metabolite exists and is connected to the rest of the model.
+% We see the metabolite number is 1189 and that there are many associated transport 
+% reactions. This indicates the metabolite exists and is connected to the rest 
+% of the model.
 % 
-% To investigate the demand of L-tryptophan in the blood, we need to add a demand 
-% reaction. We add on a demand reaction with the function addDemandReaction which 
-% takes the following inputs.
+% To investigate the demand for L-tryptophan in the blood, we need to add a 
+% demand reaction. This can be done using the addDemandReaction function, which 
+% takes the following inputs:
 %% 
 % * *model* - a metabolic model, in our case a WBM
 % * *metaboliteNameList* - a cell array of metabolites that a demand reactions 
 % has to be created for. Usually we only add one demand reaction.
 %% 
-% Now we add the demand reaction on to the model. We now rename the updated 
-% model to mWBMDemand which we have not done before when we made changes. This 
-% is because adding a demand reactions changes the model and its behaviours, it 
-% is good practice to have the original model still in case we want to make other 
-% changes. It is also good practice to only have one user added demand reaction 
-% active at a time. We could silence each newly made demand reaction after we 
-% optimised it, but by using the original model again for a new demand reaction 
-% addition we are sure we do not carry over the changes from the previous addition.
+% Now, we add the demand reaction to the model. We then rename the updated model 
+% to mWBMDemand, which we have not done previously when we making changes. This 
+% is because adding a demand reactions modifies the model and its behaviours, 
+% so it is good practice to keep the original model, in case we want to make other 
+% changes later. It is also good practice to only have one user added demand reaction 
+% active at a time. While we could silence each newly made demand reaction after 
+% optimisation, reloading the original model ensures that we do not carry over 
+% changes from previous additions.
 
 % Add a demand reaction for the metabolite of interest
 mWBMDemand = addDemandReaction(mWBM,metabolite);
 %% 
 % We can see that the demand reaction has been added by using surfNet. A new 
-% demand reaction will always have the reaction ID DM_metabolite ID[comparment]. 
-% So for our case it would be DM_trp_L[bc]
+% demand reaction will always have the reaction ID in the format DM_metabolite 
+% ID[comparment]. So in our case it would be DM_trp_L[bc] 
 
 surfNet(mWBMDemand, 'DM_trp_L[bc]')
 %% 
-% As you can see we have succesfully added on the demand reaction. The only 
+% As you can see,  we have succesfully added on the demand reaction. The only 
 % issue is that the upper bound is set to 1000, which is a normal unconstrained 
 % value to use for smaller models. However in WBMs we use the value 1000000, to 
 % ensure we do not hit the upper bound we will manually change the upper bound.
@@ -576,8 +578,8 @@ surfNet(mWBMDemand, 'DM_trp_L[bc]')
 % Unconstrain the demand reaction's upper bound for analysis
 mWBMDemand = changeRxnBounds(mWBMDemand,['DM_' metabolite],100000,'u');
 %% 
-% Now we can solve the model for the demand reaction as with the same steps 
-% as example 1.
+% Now, we can solve the model for the demand reaction using the same steps as 
+% Example 1.
 
 % Set objective to demand reaction
 mWBMDemand = changeObjective(mWBMDemand,['DM_' metabolite]);
@@ -589,18 +591,19 @@ solution = optimizeWBModel(mWBMDemand);
 solution.f
 %% 
 % The value for the blood demand reaction with mWBM_CSM5MCXD_female.mat of L-tryptophan 
-% in the blood is 328.5800 mmol/day. This is an indication of the storage capacity 
-% or pool of L-tryptophan in the blood and can be interpreted as the blood concentration 
-% or compared with blood metabolomics. Note the actual values of the demand reactions 
-% will most likely not corroborate with metabolomics, but trends across a cohort 
-% can be visualised to see if blood metabolomics and predictions match up.
+% in the blood is 328.5800 mmol/day. This indicates the storage capacity, or pool 
+% of L-tryptophan in the blood and can be interpreted as the blood concentration 
+% or compared with blood metabolomics. Note that the actual values of the demand 
+% reactions will most likely not corroborate with metabolomics, but trends across 
+% a cohort can be visualised to asses whether blood metabolomics and predictions 
+% match up.
 % Example six: Cerebrospinal fluid
-% Cerebrospinal fluid (csf)  metabolite pools can be investigated in the same 
-% way as example five and can be insightful for your investigation or again if 
-% you happen to have csf metabolomics are available. 
+% Cerebrospinal fluid (CSF) metabolite pools can be investigated in the same 
+% way as Example 5 and can provide valuable insights for your investigation, especially 
+% if CSF metabolomics data are available.
 % 
-% Peforming the same steps as example five, we set the metabolite of interest 
-% and check if it exists in the model. Note we now use csf instead bc
+% Performing the same steps as in Example 5, we set the metabolite of interest 
+% and check if it exists in the model. Note we now use csf instead bc: 
 
 % For this example, L-tryptophan (trp_L) is our metabolite of interest:
 metabolite = 'trp_L[csf]';
@@ -608,10 +611,10 @@ metabolite = 'trp_L[csf]';
 % Check if the metabolite is present in the csf comparment
 surfNet(mWBM, metabolite)
 %% 
-% We see that indeed L-tryptophan can be found in the csf compartment. Now we 
-% add on the demand reaction and change the bound. Note we use again mWBM, the 
-% 'original' model to add on a new demand reaction. We do not carry over our added 
-% demand reaction from example 5 this way.
+% We see that L-tryptophan can indeed be found in the CSF compartment. Now, 
+% we add the demand reaction and adjust the bounds. Note that we again use mWBM, 
+% the 'original' model, to add on a new demand reaction. This way, we avoid carrying 
+% over the demand reaction added in Example 5.
 
 % Add a demand reaction for the metabolite of interest
 mWBMDemand = addDemandReaction(mWBM,metabolite);
@@ -619,7 +622,7 @@ mWBMDemand = addDemandReaction(mWBM,metabolite);
 % Unconstrain dm reaction upper bound for further analysis
 mWBMDemand = changeRxnBounds(mWBMDemand,['DM_' metabolite],100000,'u');
 %% 
-% Check if the demand addition went as we expected
+% Check if the demand addition went as we expected:
 
 % Check if the reaction is created
 surfNet(mWBMDemand,['DM_' metabolite])
@@ -636,35 +639,35 @@ solution = optimizeWBModel(mWBMDemand);
 % Check maximised flux through 'DM_trp_L[csf]'
 solution.f
 %% 
-% The value we obtain with mWBM_CSM5MCXD is 334 mmol/day.  This is lower than 
-% the value for the blood demand reaction. By looking at surfNet(modelHM, metabolite) 
-% command in line 91 we see that only 334 mmol/day of L-tryptophan can cross the 
-% blood-brain barrier. This means that all the maximum allowed transport is reached 
-% - all from the blood. That also means that the brain and spine are not actively 
-% producing and transporting L-tryptophan into the csf.
-% Example seven: compartments within an organ
-% We can also look at the storage capacity for certain organs. This could be 
-% helpful if we want to look the effect of diseases that target organs or if organ 
-% biopses have been made and metabolomics are available. Here we will look at 
-% the L-tryptophan demand reaction in the cytosol of the liver. Ofcourse any compartment 
-% can be used present in an organ. First we define our metabolite of interest. 
-% Important is that we add our organ abbreviation of intersest in front the metabolite 
+% The value we obtain with mWBM_CSM5MCXD is 334 mmol/day, which is lower than 
+% the value for the blood demand reaction. By looking at the ouptut of surfNet(modelHM, 
+% metabolite) command in line 91, we see that only 334 mmol/day of L-tryptophan 
+% can cross the blood-brain barrier. This means the maximum allowed transport 
+% is reached — all coming from the blood. It also implies that the brain and spine 
+% are not actively producing or transporting L-tryptophan into the CSF.
+% Example seven: Compartments within an organ
+% We can also examine the storage capacity of specific organs. This is useful 
+% when studying the effects of diseases that target organs or when organ biopsies 
+% and metabolomics data are available. Here, we will look at the L-tryptophan 
+% demand reaction in the cytosol of the liver. Of course, any compartment present 
+% in an organ can be used. First, we define our metabolite of interest. It is 
+% important to add the organ abbreviation of interest in front of the metabolite 
 % ID. A list of organ abbreviations present in the WBMs can be found in [1].
 
 % Define metabolite of interest:
 metabolite = 'Liver_trp_L[c]';
 %% 
-% Instead of running the metabolite ID through surfNet, which makes MATLAB extremely 
-% slow due to the amount of printin statements, we check if the metabolite is 
-% transported from the blood compartment to the extracellular compartment of the 
-% liver. This specific transport reaction will always follow the structure "organ"_EX_"metabolite 
-% ID"(e)_[bc].
+% Instead of running the metabolite ID through the surfNet function, which makes 
+% MATLAB extremely slow due to the amount of print in statements, we check if 
+% the metabolite is transported from the blood compartment to the extracellular 
+% compartment of the liver. This specific transport reaction will always follow 
+% the structure "organ"_EX_"metabolite ID"(e)_[bc].
 
 % Check if the metabolite is present in the blood comparment
 surfNet(mWBM, 'Liver_EX_trp_L(e)_[bc]')
 %% 
-% We see that indeed the metabolite exists in the cytosol of the liver. Now 
-% we perform the same actions as in examples five and six
+% We see that the metabolite exists in the cytosol of the liver. Now, we perform 
+% the same steps as in examples 5 and 6: 
 
 % Add a demand reaction for the metabolite of interest
 mWBMDemand = addDemandReaction(mWBM,metabolite);
@@ -675,9 +678,9 @@ mWBMDemand = changeRxnBounds(mWBMDemand,['DM_' metabolite],100000,'u');
 % Check if the demand reactions is added on correctly
 surfNet(mWBMDemand, ['DM_' metabolite])
 %% 
-% We see that the demand reaction is indeed properly added on to the model. 
-% Investigating the maximal amount of metabolites that can be removed from the 
-% csf compartment, is done as follows: 
+% We see that the demand reaction is properly added on to the model. Investigating 
+% the maximum amount of metabolites that can be removed from the CSF compartment, 
+% is done as follows: 
 
 % Set objective to demand reaction
 mWBMDemand = changeObjective(mWBMDemand,['DM_' metabolite]);
@@ -688,8 +691,8 @@ solution = optimizeWBModel(mWBMDemand);
 % Check maximised flux through 'DM_tryp(c)'
 solution.f
 %% 
-% The value obtained with mWBM_CSM5MCXD_female.mat is that the liver can store 
-% 334 mmol/day of L-tryptophan in the cytosol.
+% The value obtained with mWBM_CSM5MCXD_female.mat shows that the liver can 
+% store 334 mmol/day of L-tryptophan in the cytosol.
 %% Investigating the influence of the microbiome in WBM models
 % When investigating metabolic influences of the gut microbiome on the host, 
 % it is important to choose reactions and metabolites of interest that can be 
@@ -698,8 +701,8 @@ solution.f
 % of a metabolite. 
 % 
 % For example, L-tryptophan (trp_L) is an essential metabolite derived from 
-% diet and gut microbiota. The tryptophan availability in the host is directly 
-% influenced  by the microbial production of tryptophan. An example of indirect 
+% diet and gut microbiota. The availability of tryptophan in the host is directly 
+% influenced by the microbial production of tryptophan. An example of indirect 
 % contributions is the neurotransmitter serotonin (VMHID: srtn). This compound 
 % is not produced by microbes, but is a downstream metabolite of tryptophan produced 
 % by human metabolic reactions. 
@@ -707,23 +710,23 @@ solution.f
 % 
 % 
 % Lets investigate the impact of the microbiome on the maximum production of 
-% tryptophan. First we will load a germ-free WBM and constrain it with the Average 
-% European Diet. We choose the female WBM "Harvetta" as muWBM_CSM5MCXD_female.mat 
-% is a combination with a Harvetta WBM and a microbiome. If we were to use Harvey 
+% tryptophan. First, we will load a germ-free WBM and constrain it using the Average 
+% European Diet. We choose the female WBM "Harvetta" because mWBM_CSM5MCXD_female.mat 
+% is a combination of a Harvetta WBM and a microbiome. If we were to use Harvey 
 % the comparison will not work, as changes could either be due to sex or the microbiome.
 
 % Prepare a germ-free WBM model.
 modelGF = loadPSCMfile('Harvetta');
 modelGF = setDietConstraints(modelGF, 'EUAverageDiet');
 %% 
-% Now we can add a demand reaction for tryptophan in the blood:
+% Now, we can add a demand reaction for tryptophan in the blood:
 
 % Add demand reaction
 modelGF = addDemandReaction(modelGF,'trp_L[bc]');
 % Unconstrain dm reaction upper bound for further analysis
 modelGF = changeRxnBounds(modelGF,'DM_trp_L[bc]',100000,'u');
 %% 
-% First we will perform FBA on a reaction of interest in a germ-free WBM model:
+% First, we will perform FBA on a reaction of interest in a germ-free WBM model:
 
 % Set the objective function
 modelGF = changeObjective(modelGF, 'DM_trp_L[bc]');
@@ -736,8 +739,8 @@ solution_GF.f
 %% 
 % We see that the maximum flux for blood pool of L-tryptophan is 5.4520 mmol/day.
 % 
-% Now we will repeat the procedure for mWBM_CSM5MCXD_female.mat. The same steps 
-% we performed in example five.
+% Now, we will repeat the procedure for mWBM_CSM5MCXD_female.mat using the same 
+% steps we performed in Example 5.
 
 % Add demand reaction
 mWBMDemand = addDemandReaction(mWBM,'trp_L[bc]');
@@ -757,30 +760,29 @@ solution_mWBM = optimizeWBModel(mWBMDemand);
 % Check maximised flux through 'EX_tryp_L[bc]]' 
 solution_mWBM.f
 %% 
-% We see that again the value of 334 mmol/day is reached for mWBM_CSM5MCXD_female.mat. 
-% To see what the microbiome contribution, both direct and indirect is on the 
-% demand reaction of L-tryptophan in the blood we subtract the germ-free value 
-% from the human-microbiome value
+% We see that the value of 334 mmol/day is again reached for mWBM_CSM5MCXD_female.mat. 
+% To determine the microbiome contribution -both direct and indirect- on the demand 
+% reaction of L-tryptophan in the blood, we subtract the germ-free value from 
+% the human-microbiome value: 
 
 solution_mWBM.f - solution_GF.f
 %% 
-% And we see that the microbiome can maximally increase the blood pool of L-tryptophan 
-% by 329 mmol/day
+% We see that the microbiome can increase the maximum blood pool of L-tryptophan 
+% by 329 mmol/day.
 %% Part 3: Solving your models for multiple reactions
 % The code above has not been optimised for speed but rather for understanding 
 % what options are available and which steps are required to solve a HMmodel. 
 % We have developed a function that has been optimised for speed called optimiseRxnMultipleWBM. 
 % The function performs the same steps as discussed in the tutorial, but has been 
 % adjusted to take multiple objective functions and models. We will use this function 
-% to calculate a couple of reactions with the HM models generated Part 1: Setup 
+% to calculate several reactions with the HM models generated in Part 1: Setup 
 % and model creation. If you have not run this step or do not have the HMmodels, 
 % you can find them also in the supplementary materials. The reason we do not 
-% run more models and reactions is that it quickly becomes times consuming to 
-% optimise each objective function of all indicated models if either the amount 
-% of models or objective functions increase.
+% run more models and reactions is that it quickly becomes time-consuming to optimise 
+% each objective function for all indicated models when either the number of models 
+% or objective functions increases.
 % 
-% mWBMPath, solutionDir, rxnList, 'diet', , 'numWorkers', , 'saveFullRes', , 
-% 'paramFluxProcessing', , 'saveDir', , 'solver', solver
+% The following directories are required for this function: 
 % 
 % 
 %% 
@@ -807,24 +809,24 @@ solution_mWBM.f - solution_GF.f
 % are saved. If saveFullRes is set to true, the reaction IDs (model.rxns) and 
 % metabolite IDs (model.mets), are also saved.  
 % * *paramFluxProcessing* - Structured array with the fields
-% * .*NumericalRounding* defines how much the predicted flux values are rounded. 
+% * *NumericalRounding-* defines how much the predicted flux values are rounded. 
 % A defined value of 1e-6 means that a flux value of 2 + 2.3e-8 is rounded to 
-% 2.                 A flux value of 0 + 1e-15 would be rounded to exactly zero. 
-% This rounding factor will also be applied to the shadow price values. If microbiome 
-% relative abundance data is provided, the same rounding factor will be applied 
-% to the relative abundance data .RxnRemovalCutoff defines the minimal number 
-% of samples for which a                     unique reaction flux could be obtained, 
-% before removing the reaction for further analysis. This parameter can be expressed 
+% 2.  A flux value of 0 + 1e-15 would be rounded to exactly zero. This rounding 
+% factor will also be applied to the shadow price values. If microbiome relative 
+% abundance data is provided, the same rounding factor will be applied to the 
+% relative abundance data .RxnRemovalCutoff defines the minimal number of samples 
+% for which a                     unique reaction flux could be obtained, before 
+% removing the reaction for further analysis. This parameter can be expressed 
 % as 1) * fraction:  the fraction of samples with unique values, 2) * SD: the 
 % standard deviation across samples, and 3) * count: the counted number of unique 
 % values. If microbiome relative abundance data is provided, the same removal 
 % cutoff factor will be applied to the relative abundance data.Defaults to: {'fraction',0.1}
-% * .*RxnEquivalenceThreshold* defines the minimal threshold of when functionally 
+% * *RxnEquivalenceThreshold* defines the minimal threshold of when functionally 
 % identical flux values are predicted, and are thus part of the same linear pathways. 
 % The threshold for functional equivalence is expressed as the R2 (r-squared) 
-% value after performing a simple linear regression between two reactions.                     
-% Default to: 0.999.
-% * .*fluxMicrobeCorrelationType* defines the method for correlating the predicted 
+% value after performing a simple linear regression between two reactions. Default 
+% to: 0.999.
+% * *fluxMicrobeCorrelationType* defines the method for correlating the predicted 
 % fluxes with microbial relative abundances. Note that this metric is not used 
 % if muWBMs are not present. The available correlation types are: 1) * regression_r2:  
 % the R2 (r-squared) value from pairwised linear regression on the predicted fluxes 
@@ -836,24 +838,24 @@ solution_mWBM.f - solution_GF.f
 % * *solver* - solver used to perform optimisations. We defined this already 
 % at the start of the tutorial.
 %% 
-% In this tutorial we are going to solve for the demand of D-glucose, butyrate, 
-% lithocholate and L-glutamate in the blood compartment as well as the ATP demand 
-% in the cytosol of the Brain. Butyrate, litocholate and L-glutamate are investigated 
-% as they are often found the be changed between controls and Parkinon's disease 
-% (PD)patients in unpublished work. D-glucose is a metabolite that has been shown 
-% to not show signifcant alterations in unpublished work. ATP demand in the brain 
+% In this tutorial, we will solve for the demand of D-glucose, butyrate, lithocholate 
+% and L-glutamate in the blood compartment, as well as ATP demand in the cytosol 
+% of the brain. Butyrate, lithocholate and L-glutamate are investigated because 
+% they are often found to be altered between controls and Parkinson's disease 
+% (PD) patients in published work. D-glucose is a metabolite that has been shown 
+% to not show signifcant alterations in published work. ATP demand in the brain 
 % is chosen as we are interested if there is a difference in PD brain energy consumption. 
 % We included 5 demand reactions, that are not yet present in the model ('DM_glc_D[bc]', 
 % 'DM_but[bc]', 'DM_glu_L[bc]', 'DM_HC02191[bc]'). The function will automatically 
 % add on demand reactions that are not yet present in the model. However, we have 
 % to input the reaction ID as it would be expected by the model. This procedure 
-% is easily done by setting DM_ before the metabolite for which the demand reaction 
+% is easily done by setting DM_ before the metabolite for the demand reaction 
 % has the created. Don't forget compartment indications and organ prefix where 
 % required!
 %% 
-% We now set all the variables required to run _analyseWBMs.m_, the path variables 
-% we already created at the start of the tutorial and we will now store them in 
-% the variables used for the function. 
+% We now set all the variables required to run analyseWBMs.m. The path variables 
+% were already created at the start of the tutorial, and we will now assign them 
+% to the variables used by the function.
 
 % Predefined at the start
 % Set paths
@@ -910,7 +912,7 @@ diet = 'EUAverageDiet';
 % * .modelLB               m by 1 vector with all lower bounds on the reactions 
 % in the WBM.
 %% 
-% For this tutorial, we will  save the additional metrics. Note that the additional 
+% For this tutorial, we will save the additional metrics. Note that the additional 
 % metrics take up a lot of hard drive space.
 
 % We are not generating big solution files so it can be set to true.
@@ -922,10 +924,10 @@ saveFullRes = true;
 numWorkersOptimization = 1;
 %% 
 % It is generally not recommended to set numWorkers equal to the number of available 
-% cores as linear solvers can already support multi-core linear optimisation, 
-% thus resulting in unnecessary overhead. On computers with 8 cores or less, it 
-% is recommended to set numWorkers to 1. On high core count machines, a numWorker 
-% value between 10% and 20% of the number of available cores is recommended. 
+% cores linear solvers already support multi-core linear optimization, which can 
+% result in unnecessary overhead. On computers with 8 cores or less, it is recommended 
+% to set numWorkers to 1. For machines with a high core count, a numWorkers value 
+% between 10% and 20% of the total available cores is advisable.
 %% 
 % Finally, we will set parameters for how the flux results are processed and 
 % prepared for statistical analysis:
@@ -954,14 +956,14 @@ paramFluxProcessing.NumericalRounding = {'fraction',0.1};
 paramFluxProcessing.RxnEquivalenceThreshold = 0.999;
 paramFluxProcessing.fluxMicrobeCorrelationType = 'regression_r2';
 %% 
-% Running _analyzeWBMs.m_ will also create and solve germ free WBMs. The germ 
-% free WBMs are made by taking one male and one female mWBM and setting the microbiome 
+% Running _analyzeWBMs.m_ will also create and solve germ free WBMs. The germ-free 
+% WBMs are made by taking one male and one female mWBM and setting the microbiome 
 % biomass exchange and metabolite transports to 0. This ensure the microbiome 
 % cannot interact with the WBM anymore. For miWBMs, a germ free model for each 
-% miWBM. These germ-free models can serve baseline of what the model is capable 
-% of doing without the microbiome. When we would compare the germfree results 
-% against the mWBM results we get an indication of the microbial contribution 
-% to that specific reaction/metabolite. 
+% miWBM. These germ-free models serve as a baseline to understand what the host 
+% model is capable of without any microbial influence.. By comparing the results 
+% of the germfree with their corresponding mWBM results, we can assess the direct 
+% and indirect contributions of the microbiome to a specific reaction/metabolite. 
 % 
 % Now that everything is defined, we can press Run Section from the Live Editor.
 
@@ -971,54 +973,61 @@ analyseWBMs(mWBMPath, paths.fba.outputPathFluxAnalysis, rxnList, 'numWorkers',..
     paramFluxProcessing, 'fluxAnalysisPath', fluxAnalysisPath, 'solver', solver);
 %% 
 % After isolating the microbial component of the predicted fluxes, reactions 
-% that have a flux value of 0, i.e., reactions without a net influence of the 
-% gut microbiome, in over a user defined threshold percentage of samples (default 
-% = 90% ) are removed from analysis . Reactions having less than  user defined 
-% threshold percentage of unique values against the sample size, are also removed 
-% from analysis. These reactions are removed to ensure an adequate samples size 
-% for later statistical analysis. Samples without a net microbial contribution 
-% can artificially skew statistical results, thus potentially masking any statistical 
-% associations with a feature of interest. Next, the reaction fluxes are checked 
-% to be linearly dependent. Linear dependence between flux predictions can occur 
-% when metabolites are in the same pathway come from identical microbial sources. 
-% Linear dependence was tested by performing spearman correlations. Reactions 
-% with fluxes that have spearman correlation coefficients above the user defined 
-% threshold (Default rho = 0.999), are flagged as linearly dependent. Linearly 
-% dependent metabolic fluxes were collapsed into a new variable as including them 
-% both does not add new information.The final table contains the microbial component 
-% of theobtained fluxes, where reactions that are mostly 0 or have limited unique 
-% flux values over samples are removed. Microbiome contributions to flux values 
-% that are highly correlated to each other are also removed and grouped into a 
-% single variable. The table is saved as flux_results.xlsx
+% that have a flux value of 0 — i.e., reactions without a net influence from the 
+% gut microbiome — in more than a user-defined threshold percentage of samples 
+% (default = 90%) are removed from further analysis. Reactions with fewer than 
+% a user-defined threshold percentage of unique flux values, relative to the total 
+% sample size, are also excluded. These filtering steps ensure an adequate sample 
+% size for downstream statistical analysis. Including reactions without a microbial 
+% contribution can artificially skew statistical results and potentially mask 
+% associations with features of interest.
+% 
+% Next, the reaction fluxes are checked for linear dependence. Linear dependence 
+% between flux predictions can occur when metabolites from the same pathway originate 
+% from identical microbial sources. This is assessed by performing Spearman correlation 
+% analysis. Reactions with a Spearman correlation coefficient above the user-defined 
+% threshold (default ρ = 0.999) are flagged as linearly dependent. These reactions 
+% are collapsed into a new combined variable, as including both does not add additional 
+% information.
+% 
+% The final output is a table containing the microbial component of the filtered 
+% flux predictions. Reactions that are mostly zero, have limited variability, 
+% or are highly correlated are removed or grouped accordingly. This final table 
+% is saved as fluxResults.xlsx
 % 
 % We also obtain which pan-species in the WBMs can contribute to the flux value 
 % for a reaction. The function extracts the shadow prices of the pan-species biomass 
 % compounds, which is saved as "shadowPricesBio" in the .mat solution structure. 
-% Each solution .mat file is structured where each column is a reaction we wanted 
-% to be solved and the rows are the pan-species models present in that specific 
-% microbiome, stored in "speciesBIO". Each cell is the shadowprice for the respective 
-% pan-species biomass metabolite and the respective solved reaction. But what 
-% is a shadow price? In its basis it is the change in consumption/production of 
-% a metabolite that will increase the flux through the target reaction by 1mmol/day. 
-% In the context of biomass of pan-species models in the microbiome, we can interpret 
-% that as follows. If the shadowprice is -5 for species A, it means that if the 
-% biomass production of species A is increased by 5 mmol/day the flux through 
-% the reaction will be increased by 1mmol/day. If the shadowprice is 5 for species 
-% B, it means that if the biomass production of species B is increased by 5mmol/day 
-% the flux through the reaction will be decreased by 1 mmol/day. The closer the 
-% is shadowprice to 0, the smaller is the required change in metabolite consumption/production 
-% to enact a change of 1mmol/day on a reaction This means that metabolites with 
-% shadow prices closer to 0 have a larger impact on the flux of a reaction than 
-% larger shadow prices. The shadow prices are stored as a summary file in shadowPriceStatistics.xlsx 
-% and for each individual reaction the raw information is saved in the folder 
-% microbeShadowPrices in the fluxAnalysis folder.
+% Each solution .mat file is structured is organized such that each column corresponds 
+% to one of the reactions we aimed to solve, while the rows correspond to the 
+% pan-species models present in that specific microbiome, stored in "speciesBIO".Each 
+% cell contains the shadow price for the respective pan-species biomass metabolite 
+% and the associated reaction. But what is a shadow price? IAt its core, it represents 
+% the change in consumption or production of a metabolite that would result in 
+% an increase of 1 mmol/day in the flux through the target reaction. In the context 
+% of biomass of pan-species models in the microbiome, we can interpret it as follows:
+%% 
+% * If the shadowprice is -5 for species A, it means that if the biomass production 
+% of species A is increased by 5 mmol/day the flux through the reaction will be 
+% increased by 1mmol/day. 
+% * If the shadowprice is 5 for species B, it means that if the biomass production 
+% of species B is increased by 5mmol/day the flux through the reaction will be 
+% decreased by 1 mmol/day. 
+%% 
+% The closer the is shadowprice to 0, the smaller the required change in metabolite 
+% consumption/production to enact a influence a change of 1mmol/day on a reaction 
+% This means that metabolites with shadow prices closer to 0 have a larger impact 
+% on the flux of a reaction than larger shadow prices. The shadow prices are stored 
+% as a summary file in shadowPriceStatistics.xlsx and for each individual reaction 
+% the raw information is saved in the folder microbeShadowPrices in the fluxAnalysis 
+% folder.
 % 
-% Then, the function correlates the relative abundances (as calculated per MARS, 
-% Part 1 of this tutorial) of individual microbes to the microbial flux contributions, 
-% as we know which microbe models are contributing to which flux from the shadowPrices. 
-% By only correlating the relative abundances of microbes that affect the microbial 
-% flux we vastly reduce the number of correlations that are performed. The data 
-% is saved as microbe_metabolite_corr.csv.
+% Then, the function correlates the relative abundances (calculated using MARS, 
+% see Part 1 of this tutorial) to their microbial flux contributions. Since we 
+% know which microbial models contribute to each flux from the shadow prices, 
+% we limit the correlation analysis to only those microbes that actually influence 
+% the flux. This approach significantly reduces the total number of correlations 
+% performed. The resulting data is saved asmicrobe_metabolite_corr.csv.
 % 
 % 
 % 
@@ -1042,15 +1051,15 @@ analyseWBMs(mWBMPath, paths.fba.outputPathFluxAnalysis, rxnList, 'numWorkers',..
 % Table 1. Types of analyses on the fluxes and microbial relative abundances 
 % supported by the performStatsPersephone.m function. 
 % 
-% Before performing the statistical analysis, the predicted fluxes are log2 
-% transformed and z-scaled. Z-transformation was done to ensure that the statistical 
-% effect sizes, e.g., odds ratio's and regression coefficients, are comparable 
-% across reactions. Not performing a z-transformation can result in dramatically 
-% different effect sizes as the scale of flux values can differ between reactions. 
-% Log transformation on the relative abundances was done to increase normality 
-% of the relative abundance distributions. If the WBMs contain a gut microbiota 
-% lumen, i.e, mWBMs or miWBMs, the extracted relative abundances from the WBMs 
-% are analysed in the exact same manner as the predicted fluxes. 
+% Before performing statistical analysis, the predicted fluxes are log₂-transformed 
+% and z-scaled. Z-transformation ensures that statistical effect sizes—such as 
+% odds ratios and regression coefficients—are comparable across reactions. Without 
+% z-transformation, differences in the scale of flux values across reactions could 
+% result in misleadingly large or small effect sizes. Log transformation is also 
+% applied to the relative abundances to improve the normality of their distributions. 
+% If the WBMs include a gut microbiota lumen (i.e., mWBMs or miWBMs), the extracted 
+% relative abundances from the WBMs are processed in the same way as the predicted 
+% fluxes.
 %% 
 % First, we will define the input paths:
 
@@ -1060,13 +1069,13 @@ wbmRelAbunPath = fullfile(resultPath,'fluxAnalysis', 'WBM_relative_abundances.cs
 metadataPath = fullfile(resultPath,'demo_metadata_processed.csv');
 %% 
 % Next, we will read the metadata and we will choose a metadata variable to 
-% investigate.
+% investigate:
 
 metadata = readMetadataForPersephone(metadataPath);
 head(metadata)
 %% 
 % Here, we will set diagnosis as the response (dependent) variable for the statistical 
-% analysis. 
+% analysis:
 
 response = 'diagnosis';
 
@@ -1086,15 +1095,15 @@ updatedMetadataPath = erase(metadataPath,'.csv') + "_removedNonIBD.csv";
 writetable(metadata,updatedMetadataPath);
 %% 
 % Next, we will define variables to control for unwanted confounding effects.  
-% We will use age and sex as control variables here.
+% Here, ee will use age and sex as control variables.
 
 confounders = {'age', 'Sex'};
 %% 
-% As mWBMs were generated for this dataset, exploratory statistics against the 
-% response variable will also be generated for the microbial relative abundances. 
-% We will however, only analyse microbial species that are present in at least 
-% an X percentage of samples in the cohort. Here, we will define this cutoff value 
-% as 10% of samples.
+% As mWBMs were generated for this dataset, exploratory statistics will also 
+% be performed on the microbial relative abundances in relation to the response 
+% variable. However, only microbial species present in at least a defined percentage 
+% of the cohort will be included in the analysis. In this case, we set the cutoff 
+% value at 10% of the samples.
 
 microbeCutoff = 0.1;
 %% 
